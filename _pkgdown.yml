@@ -1,11 +1,9 @@
-url: https://github.com/bdshaff/meridianR
-
+url: https://bdshaff.github.io/meridianR/
 template:
   bslib:
     version: 5
     brand: _brand.yml
-  light-switch: true
-
+  light-switch: yes
 reference:
 - title: Installation & environment
   desc: Provision Meridian's Python dependencies and select a backend.
@@ -15,7 +13,6 @@ reference:
   - meridian_available
   - meridian_version
   - meridian
-
 - title: Input data
   desc: Assemble Meridian input data from R data frames.
   contents:
@@ -24,13 +21,11 @@ reference:
   - coord_to_columns
   - csv_loader
   - load_input_data
-
 - title: Model specification & priors
   contents:
   - model_spec
   - prior_distribution
   - prior_constructors
-
 - title: Fitting & serialization
   contents:
   - meridian_model
@@ -38,7 +33,6 @@ reference:
   - fit.meridian_model
   - summary.meridian_model
   - save_model
-
 - title: Analysis
   desc: Tidy per-channel metrics and curves from a fitted model.
   contents:
@@ -50,7 +44,6 @@ reference:
   - adstock_decay
   - rhat_summary
   - predictive_accuracy
-
 - title: Plots & reports
   desc: ggplot2-native charts and Meridian's HTML summary.
   contents:
@@ -63,11 +56,8 @@ reference:
   - plot_adstock_decay
   - plot_rhat
   - model_report
-
 - title: Data
-  contents:
-  - sales
-
+  contents: sales
 - title: Reexports
-  contents:
-  - reexports
+  contents: reexports
+

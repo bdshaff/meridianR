@@ -12,3 +12,4 @@ docs/
 *.pkl
 vignettes/*.html
 meridian_summary.html
+docs

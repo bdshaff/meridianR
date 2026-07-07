@@ -29,7 +29,7 @@ Suggests:
 Config/testthat/edition: 3
 Config/Needs/website: brand.yml
 VignetteBuilder: knitr
-URL: https://github.com/bdshaff/meridianR
+URL: https://github.com/bdshaff/meridianR, https://bdshaff.github.io/meridianR/
 BugReports: https://github.com/bdshaff/meridianR/issues
 Depends: 
     R (>= 3.5)
