@@ -1,0 +1,12 @@
+^meridianR\.Rproj$
+^\.Rproj\.user$
+^LICENSE\.md$
+^_pkgdown\.yml$
+^_brand\.yml$
+^docs$
+^pkgdown$
+^\.github$
+^README\.Rmd$
+^data-raw$
+^\.claude$
+^\.DS_Store$

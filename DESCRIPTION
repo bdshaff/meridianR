@@ -1,0 +1,36 @@
+Package: meridianR
+Title: R Interface to Google Meridian (Marketing Mix Modeling)
+Version: 0.0.0.9000
+Authors@R:
+    person("Ben Denis", "Shaffer", , "shafferbendenis@gmail.com", role = c("aut", "cre"))
+Description: An R interface to Google's 'Meridian' Bayesian Marketing Mix
+    Modeling (MMM) library. Wraps the 'Meridian' 'Python' package via
+    'reticulate', providing faithful bindings to its data, model, and analysis
+    objects together with an idiomatic R layer for loading data, configuring
+    priors and model specifications, fitting models, and analyzing results.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+SystemRequirements: Python (>= 3.10)
+Imports:
+    cli,
+    generics,
+    ggplot2,
+    reticulate (>= 1.41.0),
+    rlang,
+    scales,
+    tibble
+Suggests:
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0),
+    withr
+Config/testthat/edition: 3
+Config/Needs/website: brand.yml
+VignetteBuilder: knitr
+URL: https://github.com/bdshaff/meridianR
+BugReports: https://github.com/bdshaff/meridianR/issues
+Depends: 
+    R (>= 3.5)
+LazyData: true
