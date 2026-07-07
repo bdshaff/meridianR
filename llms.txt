@@ -1,0 +1,263 @@
+# meridianR
+
+An R interface to [Google
+Meridian](https://developers.google.com/meridian), a Bayesian Marketing
+Mix Modeling (MMM) library. meridianR wraps the Meridian Python package
+with [reticulate](https://rstudio.github.io/reticulate/), following the
+design of [keras3](https://keras3.posit.co/): faithful bindings to
+Meridian’s data, model, and analysis objects, plus an idiomatic R layer
+with tidy data in and out, S3
+[`print()`](https://rdrr.io/r/base/print.html)/[`summary()`](https://rdrr.io/r/base/summary.html),
+and pipe-friendly verbs.
+
+## Installation
+
+Install the development version from GitHub:
+
+``` r
+
+# install.packages("pak")
+pak::pak("bdshaff/meridianR")
+```
+
+Then provision the Python side (TensorFlow / TF-Probability) once:
+
+``` r
+
+library(meridianR)
+install_meridian()
+```
+
+`install_meridian(gpu = TRUE)` installs the CUDA build;
+`install_meridian(backend = "jax")` uses the experimental JAX backend.
+If you skip this step, reticulate provisions an environment
+automatically on first use.
+
+## Quick start
+
+``` r
+
+library(meridianR)
+
+# 1. Assemble input data from a long-format data frame
+input <- as_meridian_input(
+  sales,
+  kpi            = "conversions",
+  time           = "week",
+  geo            = "region",
+  population     = "population",
+  media_spend    = c("tv_spend", "search_spend"),
+  media_channels = c("TV", "Search"),
+  controls       = "price_index"
+)
+
+# 2. Configure priors and the model specification
+spec <- model_spec(
+  prior   = prior_distribution(roi_m = prior_lognormal(0.2, 0.9)),
+  max_lag = 8
+)
+
+# 3. Fit
+mmm <- meridian_model(input, spec)
+fit(mmm, n_chains = 7, n_keep = 1000)
+
+summary(mmm)
+```
+
+See
+[`vignette("getting-started")`](https://bdshaff.github.io/meridianR/articles/getting-started.md)
+for the full walkthrough.
+
+## Choosing the Python environment
+
+Meridian needs Python \>= 3.10, and meridianR installs it into the
+`r-meridian` virtual environment. reticulate can only bind **one**
+Python per R session, and an interpreter pinned by `RETICULATE_PYTHON`
+or your IDE takes precedence over meridianR’s default. If another Python
+is initialized first you will see:
+
+    ERROR: The requested version of Python (...) cannot be used, as another version
+    of Python (...) has already been initialized.
+
+To fix it, point reticulate at `r-meridian` **before** anything else
+touches Python, then restart R:
+
+- In **RStudio**: Tools -\> Global Options -\> Python -\> Select -\>
+  Virtual Environments -\> `r-meridian` (or set it per project), then
+  restart the session.
+
+- In a **fresh session**, as the first line:
+
+  ``` r
+
+  reticulate::use_virtualenv("r-meridian", required = TRUE)
+  library(meridianR)
+  ```
+
+meridianR warns at load time when `RETICULATE_PYTHON` points elsewhere.
+
+## Python warnings
+
+Meridian emits warnings through Python’s `warnings` module, which
+normally print raw (file path, line number, and all). meridianR reroutes
+them so they appear as ordinary R warnings of class
+`meridian_python_warning` – cli-formatted and silenceable with
+[`suppressWarnings()`](https://rdrr.io/r/base/warning.html). To keep the
+raw Python output instead, set
+`options(meridianR.reformat_warnings = FALSE)` before first use.
+
+## Status
+
+meridianR is in early development. The current release covers the **data
+and modeling core** — data loading, model specification, priors, and
+MCMC fitting. Analysis (tidy metrics and ggplot2 charts) and budget
+optimization are on the roadmap.
+
+Everything in Meridian remains reachable through the `meridian` module
+handle, the low-level escape hatch beneath the wrappers.
+
+# Package index
+
+## Installation & environment
+
+Provision Meridian’s Python dependencies and select a backend.
+
+- [`install_meridian()`](https://bdshaff.github.io/meridianR/reference/install_meridian.md)
+  : Install Meridian and its Python dependencies
+- [`use_backend()`](https://bdshaff.github.io/meridianR/reference/use_backend.md)
+  : Select the Meridian compute backend
+- [`meridian_available()`](https://bdshaff.github.io/meridianR/reference/meridian_available.md)
+  : Is the Meridian Python package available?
+- [`meridian_version()`](https://bdshaff.github.io/meridianR/reference/meridian_version.md)
+  : Installed Meridian version
+- [`meridian`](https://bdshaff.github.io/meridianR/reference/meridian.md)
+  : Direct handle to the Meridian Python module
+
+## Input data
+
+Assemble Meridian input data from R data frames.
+
+- [`as_meridian_input()`](https://bdshaff.github.io/meridianR/reference/as_meridian_input.md)
+  : Assemble Meridian input data from a data frame
+- [`input_data_builder()`](https://bdshaff.github.io/meridianR/reference/input_data_builder.md)
+  [`with_kpi()`](https://bdshaff.github.io/meridianR/reference/input_data_builder.md)
+  [`with_population()`](https://bdshaff.github.io/meridianR/reference/input_data_builder.md)
+  [`with_controls()`](https://bdshaff.github.io/meridianR/reference/input_data_builder.md)
+  [`with_revenue_per_kpi()`](https://bdshaff.github.io/meridianR/reference/input_data_builder.md)
+  [`with_media()`](https://bdshaff.github.io/meridianR/reference/input_data_builder.md)
+  [`with_reach()`](https://bdshaff.github.io/meridianR/reference/input_data_builder.md)
+  [`with_organic_media()`](https://bdshaff.github.io/meridianR/reference/input_data_builder.md)
+  [`with_non_media_treatments()`](https://bdshaff.github.io/meridianR/reference/input_data_builder.md)
+  [`build_input_data()`](https://bdshaff.github.io/meridianR/reference/input_data_builder.md)
+  : Build Meridian input data with a fluent builder
+- [`coord_to_columns()`](https://bdshaff.github.io/meridianR/reference/coord_to_columns.md)
+  : Map data columns to Meridian coordinates
+- [`csv_loader()`](https://bdshaff.github.io/meridianR/reference/csv_loader.md)
+  [`data_frame_loader()`](https://bdshaff.github.io/meridianR/reference/csv_loader.md)
+  : Load Meridian input data from a CSV file or data frame
+- [`load_input_data()`](https://bdshaff.github.io/meridianR/reference/load_input_data.md)
+  : Realize input data from a loader
+
+## Model specification & priors
+
+- [`model_spec()`](https://bdshaff.github.io/meridianR/reference/model_spec.md)
+  : Configure a Meridian model
+- [`prior_distribution()`](https://bdshaff.github.io/meridianR/reference/prior_distribution.md)
+  : Prior distributions for a Meridian model
+- [`prior_lognormal()`](https://bdshaff.github.io/meridianR/reference/prior_constructors.md)
+  [`prior_normal()`](https://bdshaff.github.io/meridianR/reference/prior_constructors.md)
+  [`prior_halfnormal()`](https://bdshaff.github.io/meridianR/reference/prior_constructors.md)
+  [`prior_truncated_normal()`](https://bdshaff.github.io/meridianR/reference/prior_constructors.md)
+  [`prior_uniform()`](https://bdshaff.github.io/meridianR/reference/prior_constructors.md)
+  [`prior_beta()`](https://bdshaff.github.io/meridianR/reference/prior_constructors.md)
+  [`prior_deterministic()`](https://bdshaff.github.io/meridianR/reference/prior_constructors.md)
+  : Prior distribution constructors
+
+## Fitting & serialization
+
+- [`meridian_model()`](https://bdshaff.github.io/meridianR/reference/meridian_model.md)
+  : Create a Meridian model
+- [`sample_prior()`](https://bdshaff.github.io/meridianR/reference/sample_prior.md)
+  [`sample_posterior()`](https://bdshaff.github.io/meridianR/reference/sample_prior.md)
+  : Draw from a Meridian model's prior and posterior
+- [`fit(`*`<meridian_model>`*`)`](https://bdshaff.github.io/meridianR/reference/fit.meridian_model.md)
+  : Fit a Meridian model
+- [`summary(`*`<meridian_model>`*`)`](https://bdshaff.github.io/meridianR/reference/summary.meridian_model.md)
+  : Summarize a fitted Meridian model
+- [`save_model()`](https://bdshaff.github.io/meridianR/reference/save_model.md)
+  [`load_model()`](https://bdshaff.github.io/meridianR/reference/save_model.md)
+  : Save and load a Meridian model
+
+## Analysis
+
+Tidy per-channel metrics and curves from a fitted model.
+
+- [`analyzer()`](https://bdshaff.github.io/meridianR/reference/analyzer.md)
+  : Create a Meridian analyzer
+- [`summary_metrics()`](https://bdshaff.github.io/meridianR/reference/summary_metrics.md)
+  : Channel-level summary metrics
+- [`expected_vs_actual()`](https://bdshaff.github.io/meridianR/reference/expected_vs_actual.md)
+  : Expected versus actual KPI over time
+- [`response_curves()`](https://bdshaff.github.io/meridianR/reference/response_curves.md)
+  : Response curves (incremental outcome versus spend)
+- [`hill_curves()`](https://bdshaff.github.io/meridianR/reference/hill_curves.md)
+  : Hill saturation curves
+- [`adstock_decay()`](https://bdshaff.github.io/meridianR/reference/adstock_decay.md)
+  : Adstock decay curves
+- [`rhat_summary()`](https://bdshaff.github.io/meridianR/reference/rhat_summary.md)
+  : Convergence diagnostics (R-hat) summary
+- [`predictive_accuracy()`](https://bdshaff.github.io/meridianR/reference/predictive_accuracy.md)
+  : Predictive accuracy metrics
+
+## Plots & reports
+
+ggplot2-native charts and Meridian’s HTML summary.
+
+- [`autoplot(`*`<meridian_model>`*`)`](https://bdshaff.github.io/meridianR/reference/autoplot.meridian_model.md)
+  [`plot(`*`<meridian_model>`*`)`](https://bdshaff.github.io/meridianR/reference/autoplot.meridian_model.md)
+  : Plot a fitted Meridian model
+- [`plot_model_fit()`](https://bdshaff.github.io/meridianR/reference/plot_model_fit.md)
+  : Plot expected versus actual KPI over time
+- [`plot_roi()`](https://bdshaff.github.io/meridianR/reference/plot_roi.md)
+  : Plot return on investment by channel
+- [`plot_contribution()`](https://bdshaff.github.io/meridianR/reference/plot_contribution.md)
+  : Plot each channel's share of KPI contribution
+- [`plot_response_curves()`](https://bdshaff.github.io/meridianR/reference/plot_response_curves.md)
+  : Plot response curves (incremental outcome versus spend)
+- [`plot_hill_curves()`](https://bdshaff.github.io/meridianR/reference/plot_hill_curves.md)
+  : Plot Hill saturation curves
+- [`plot_adstock_decay()`](https://bdshaff.github.io/meridianR/reference/plot_adstock_decay.md)
+  : Plot adstock decay curves
+- [`plot_rhat()`](https://bdshaff.github.io/meridianR/reference/plot_rhat.md)
+  : Plot convergence diagnostics (max R-hat by parameter)
+- [`model_report()`](https://bdshaff.github.io/meridianR/reference/model_report.md)
+  : Write Meridian's HTML model-results summary
+
+## Data
+
+- [`sales`](https://bdshaff.github.io/meridianR/reference/sales.md) :
+  Simulated weekly marketing-mix data
+
+## Reexports
+
+- [`reexports`](https://bdshaff.github.io/meridianR/reference/reexports.md)
+  [`import`](https://bdshaff.github.io/meridianR/reference/reexports.md)
+  [`py_require`](https://bdshaff.github.io/meridianR/reference/reexports.md)
+  [`py_config`](https://bdshaff.github.io/meridianR/reference/reexports.md)
+  [`r_to_py`](https://bdshaff.github.io/meridianR/reference/reexports.md)
+  [`py_to_r`](https://bdshaff.github.io/meridianR/reference/reexports.md)
+  [`use_python`](https://bdshaff.github.io/meridianR/reference/reexports.md)
+  [`use_virtualenv`](https://bdshaff.github.io/meridianR/reference/reexports.md)
+  [`use_condaenv`](https://bdshaff.github.io/meridianR/reference/reexports.md)
+  [`fit`](https://bdshaff.github.io/meridianR/reference/reexports.md)
+  [`autoplot`](https://bdshaff.github.io/meridianR/reference/reexports.md)
+  : Objects exported from other packages
+
+# Articles
+
+### All vignettes
+
+- [Analyzing a fitted
+  model](https://bdshaff.github.io/meridianR/articles/analysis.md):
+- [Getting started with
+  meridianR](https://bdshaff.github.io/meridianR/articles/getting-started.md):
